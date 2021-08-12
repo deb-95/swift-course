@@ -7,15 +7,18 @@
 //
 
 import UIKit
+import AVFoundation
 
 class ViewController: UIViewController {
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var timerView: UIProgressView!
     
+    var player: AVAudioPlayer!
+    
     let eggTimes: [String: Int]  = [
-        "Soft": 3, //300,
-        "Medium": 4, //420,
-        "Hard": 7, //720,
+        "Soft": 300,
+        "Medium": 420,
+        "Hard": 720,
     ]
     var timerTotalSeconds: Int = 0
     var timerSecondsRemaining: Int = 0
@@ -40,6 +43,7 @@ class ViewController: UIViewController {
                 self.timerSecondsRemaining -= 1
             } else {
                 self.titleLabel.text = "Done"
+                self.playAlarm()
                 timer.invalidate()
             }
             
@@ -48,9 +52,13 @@ class ViewController: UIViewController {
     
     func updateProgressBar() {
         let percentage = 1 - Float(timerSecondsRemaining) / Float(timerTotalSeconds)
-        
         self.timerView.progress = percentage
-        
+    }
+    
+    func playAlarm() {
+        let url = Bundle.main.url(forResource: "alarm_sound", withExtension: "mp3")
+        player = try! AVAudioPlayer(contentsOf: url!)
+        player.play()
     }
     
 }
