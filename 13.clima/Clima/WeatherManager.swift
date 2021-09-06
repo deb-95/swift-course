@@ -8,7 +8,7 @@
 
 import Foundation
 
-//let apiKey = ""
+let apiKey = ""
 
 protocol WeatherManagerDelegate {
     func didUpdateWeather(_ weatherManager: WeatherManager, weather: WeatherModel)
