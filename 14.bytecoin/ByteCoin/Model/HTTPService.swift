@@ -72,19 +72,3 @@ extension HTTPServiceBase {
         }
     }
 }
-
-struct CoinDataHTTPService: HTTPServiceBase {
-    let baseURL = "https://rest.coinapi.io/v1/exchangerate/BTC"
-    static let apiKey = ""
-    
-    func getCoinData(with request: RequestBase) {
-        executeGet(with: request)
-        { (data: CoinDataResponse) in
-            print(data)
-        }
-        errorHandler: { error in
-            print(error)
-        }
-        
-    }
-}

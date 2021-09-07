@@ -10,4 +10,8 @@ import Foundation
 
 struct CoinModel {
     let value: Double
+    
+    var stringValue: String {
+        return String(format: "%.2f", value)
+    }
 }
