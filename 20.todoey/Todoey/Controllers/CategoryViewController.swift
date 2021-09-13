@@ -7,20 +7,22 @@
 //
 
 import UIKit
-//import CoreData
 import RealmSwift
+import ChameleonFramework
 
-class CategoryViewController: UITableViewController {
-    
-    let realm = try! Realm()
+class CategoryViewController: SwipeTableViewController {
     
     var categories: Results<RealmCategory>?
     
-//    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-
+    //    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         loadData()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        navigationController?.navigationBar.backgroundColor = UIColor.flatBlue()
     }
     
     @IBAction func addPressed(_ sender: UIBarButtonItem) {
@@ -30,6 +32,7 @@ class CategoryViewController: UITableViewController {
             if let categoryName = textField.text {
                 let newCategory = RealmCategory()
                 newCategory.name = categoryName
+                newCategory.color = UIColor.randomFlat().hexValue()
                 self.save(category: newCategory)
             }
         }
@@ -40,17 +43,21 @@ class CategoryViewController: UITableViewController {
         }
         present(alert, animated: true, completion: nil)
     }
-
+    
     // MARK: - Table view data source
-
+    
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return categories?.count ?? 1
     }
-
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         let category = categories?[indexPath.row]
+        let color = UIColor(hexString: category?.color ?? UIColor.flatBlue().hexValue())
         cell.textLabel?.text = category?.name ?? "No categories added yet"
+        cell.accessoryType = category?.name != nil ? .disclosureIndicator : .none
+        cell.backgroundColor = color
+        cell.textLabel?.tintColor = ContrastColorOf(color!, returnFlat: true)
         return cell
     }
     
@@ -62,14 +69,14 @@ class CategoryViewController: UITableViewController {
     
     // MARK: - Data manipulation methods
     
-//    func loadData(with request: NSFetchRequest<Category> = Category.fetchRequest()) {
-//        do {
-//            categories = try context.fetch(request)
-//        } catch {
-//            print("Error while loading data. \(error)")
-//        }
-//        self.tableView.reloadData()
-//    }
+    //    func loadData(with request: NSFetchRequest<Category> = Category.fetchRequest()) {
+    //        do {
+    //            categories = try context.fetch(request)
+    //        } catch {
+    //            print("Error while loading data. \(error)")
+    //        }
+    //        self.tableView.reloadData()
+    //    }
     
     func loadData() {
         categories = realm.objects(RealmCategory.self)
@@ -80,14 +87,13 @@ class CategoryViewController: UITableViewController {
         do {
             try realm.write() {
                 realm.add(category)
-//                realm.add(categories)
             }
         } catch {
             print("Error while saving data. \(error)")
         }
         self.tableView.reloadData()
     }
-
+    
     //MARK: - Segue
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         let destinationVC = segue.destination as! ToDoListViewController
@@ -97,5 +103,16 @@ class CategoryViewController: UITableViewController {
             destinationVC.selectedCategory = category
         }
     }
-
+    
+    override func delete(at indexPath: IndexPath) {
+        if let category = self.categories?[indexPath.row] {
+            do {
+                try self.realm.write {
+                    self.realm.delete(category)
+                }
+            } catch {
+                print("Error while deleting category. \(error)")
+            }
+        }
+    }
 }

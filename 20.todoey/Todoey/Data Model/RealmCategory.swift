@@ -12,4 +12,5 @@ import RealmSwift
 class RealmCategory: Object {
     @Persisted var name: String = ""
     @Persisted var items: List<RealmToDoItem> = List()
+    @Persisted var color: String
 }

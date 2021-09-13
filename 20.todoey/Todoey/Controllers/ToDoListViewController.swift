@@ -9,10 +9,9 @@
 import UIKit
 //import CoreData
 import RealmSwift
+import ChameleonFramework
 
-class ToDoListViewController: UITableViewController {
-    
-    let realm = try! Realm()
+class ToDoListViewController: SwipeTableViewController {
     var items: Results<RealmToDoItem>?
     var selectedCategory: RealmCategory? {
         didSet {
@@ -20,10 +19,20 @@ class ToDoListViewController: UITableViewController {
         }
     }
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-    }
+    @IBOutlet weak var searchBar: UISearchBar!
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if let currentCategory = selectedCategory {
+            title = currentCategory.name
+            let color = UIColor(hexString: currentCategory.color)
+            navigationController?.navigationBar.barTintColor = color
+            navigationController?.navigationBar.backgroundColor = color
+            navigationController?.navigationBar.tintColor = ContrastColorOf(color!, returnFlat: true)
+            navigationController?.navigationBar.largeTitleTextAttributes = [.foregroundColor: ContrastColorOf(color!, returnFlat: true)]
+            searchBar.barTintColor = color
+        }
+    }
     
     // MARK: - Table View Datasource Methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -31,11 +40,22 @@ class ToDoListViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         let toDoItem = items?[indexPath.row]
         cell.textLabel?.text = toDoItem?.content ?? "No items added yet"
         cell.accessoryType = toDoItem?.checked ?? false ? .checkmark : .none
+        
+        if let currentCategory = selectedCategory {
+            if let color = UIColor(hexString: currentCategory.color)?.darken(byPercentage: CGFloat(getDarkenPercentage(for: indexPath.row))) {
+                cell.backgroundColor = color
+                cell.textLabel?.textColor = ContrastColorOf(color, returnFlat: true)
+            }
+        }
         return cell
+    }
+    
+    func getDarkenPercentage(for indexPathRow: Int) -> CGFloat {
+        return CGFloat(indexPathRow) / CGFloat(items!.count)
     }
     
     // MARK: - Table View Delegate Methods
@@ -112,6 +132,18 @@ class ToDoListViewController: UITableViewController {
         items = selectedCategory?.items.sorted(byKeyPath: "dateCreated", ascending: true)
         tableView.reloadData()
     }
+    
+    override func delete(at indexPath: IndexPath) {
+        if let item = self.items?[indexPath.row] {
+            do {
+                try self.realm.write {
+                    self.realm.delete(item)
+                }
+            } catch {
+                print("Error while deleting category. \(error)")
+            }
+        }
+    }
 }
 
 //MARK: - SearchBar methods
@@ -121,6 +153,7 @@ extension ToDoListViewController: UISearchBarDelegate {
 //        let predicate = NSPredicate(format: "content CONTAINS[cd] %@", searchBar.text!)
 //        request.sortDescriptors = [NSSortDescriptor(key: "content", ascending: true)]
         items = items?.filter("content CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: true)
+        self.tableView.reloadData()
     }
 
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
