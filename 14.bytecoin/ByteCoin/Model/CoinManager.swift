@@ -20,7 +20,18 @@ struct CoinManager {
     let currencyArray = ["AUD", "BRL","CAD","CNY","EUR","GBP","HKD","IDR","ILS","INR","JPY","MXN","NOK","NZD","PLN","RON","RUB","SEK","SGD","USD","ZAR"]
 
     func getCoinPrice(for quote: String) {
-        coinService.getCoinData(with: CoinDataRequest(quote: quote), onData: onData, onError: onError)
+        coinService.getCoinData(with: CoinDataRequest(quote: quote), onData: handleResult)
+    }
+    
+    func handleResult(result: Result<CoinDataResponse, Error>) {
+        switch (result) {
+        case .success(let responseData):
+            onData(data: responseData)
+            break;
+        case .failure(let error):
+            onError(error: error)
+            break;
+        }
     }
     
     func onData(data: CoinDataResponse) {

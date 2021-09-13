@@ -12,7 +12,7 @@ struct CoinDataHTTPService: HTTPServiceBase {
     let baseURL = "https://rest.coinapi.io/v1/exchangerate/BTC"
     static let apiKey = ""
     
-    func getCoinData(with request: RequestBase, onData: @escaping (_ data: CoinDataResponse) -> Void, onError: @escaping (_ error: Error) -> Void) {
-        executeGet(with: request, completionHandler: onData, errorHandler: onError)
+    func getCoinData(with request: RequestBase, onData: @escaping (_ data: Result<CoinDataResponse, Error>) -> Void) {
+        executeGet(with: request, completionHandler: onData)
     }
 }

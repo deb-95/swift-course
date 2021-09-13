@@ -24,8 +24,7 @@ protocol HTTPServiceBase {
     var baseURL: String { get }
     func executeGet<T: Decodable>(
         with requestBase: RequestBase,
-        completionHandler: @escaping (_ responseData: T) -> Void,
-        errorHandler: @escaping  (_ error: Error) -> Void
+        completionHandler: @escaping (_ responseData: Result<T, Error>) -> Void
     )
 }
 
@@ -51,19 +50,19 @@ extension HTTPServiceBase {
         }
     }
     
-    func executeGet<T: Decodable>(with requestBase: RequestBase, completionHandler: @escaping (T) -> Void, errorHandler:  @escaping (Error) -> Void) {
+    func executeGet<T: Decodable>(with requestBase: RequestBase, completionHandler: @escaping (Result<T, Error>) -> Void) {
         if let url = getFullUrl(request: requestBase) {
             let session = URLSession(configuration: .default)
-            var request = URLRequest(url: url)
+            let request = URLRequest(url: url)
             let task = session.dataTask(with: request) { data, response, error in
                 if error != nil {
-                    errorHandler(error!)
+                    completionHandler(.failure(MyError(errorType: "Request error")))
                 }
                 if let safeData = data {
                     if let response: T = parseJSON(jsonData: safeData) {
-                        completionHandler(response)
+                        completionHandler(.success(response))
                     } else {
-                        errorHandler(MyError(errorType: "Couldn't get data"))
+                        completionHandler(.failure(MyError(errorType: "Couldn't get data")))
                     }
                 }
                 
